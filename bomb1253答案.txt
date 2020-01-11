@@ -1,0 +1,189 @@
+工具——
+tar -xvf bombk.tar
+objdump -d bomb 
+b explode_bomb
+b strings_not_equal
+si
+相对寻址 b phase_1+xx
+x/s  print  
+i r
+i b
+
+答案——
+We have to stand with our North Korean allies.
+1 2 4 7 11 16
+1 a 520 
+6 6  GreatestTAOisSimplest		
+beldog
+1 2 4 6 3 5
+
+注释——
+//strings_not_equal
+//（+1 +2 +3 +4 +5）
+//根据存储地址判断输入的类型是int char int,之后读出520和97（'a'),1刚刚好直接过了
+//后一个6是直接读汇编代码确定的，前一个数是0-14范围所以直接一个个测试；这是secret_bomb的进入方式
+//字符串经过加密之后要求得到的结果是devils
+//链表题目，根据输入的1-6的排序确定对链表的重新排序方式，如果最后的重排链表递增则pass，否则爆炸
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+5:
+    1573:	48 83 ec 10          	sub    $0x10,%rsp
+    1577:	48 89 fb             	mov    %rdi,%rbx
+    158a:	e8 8c 02 00 00       	callq  181b <string_length>		//调用函数
+    158f:	83 f8 06             	cmp    $0x6,%eax 			///必须eax=6
+    1592:	75 07                	jne    159b <phase_5+0x29>
+    1594:	b8 00 00 00 00       	mov    $0x0,%eax			//eax=0
+  
+//循环——************************************************************************************************
+    15a2:	48 63 c8             	movslq %eax,%rcx			//rcx=eax
+    15a5:	0f b6 14 0b          	movzbl (%rbx,%rcx,1),%edx		//edx=*(rbx+rcx)
+    15a9:	83 e2 0f             	and    $0xf,%edx			//edx=edx&0x1111
+    15ac:	48 8d 35 bd 17 00 00 	lea    0x17bd(%rip),%rsi       	//rsi=xx
+    15b3:	0f b6 14 16          	movzbl (%rsi,%rdx,1),%edx		//edx=*(rsi+rdx)
+    15b7:	88 54 0c 01          	mov    %dl,0x1(%rsp,%rcx,1)		//*(rsp+rcx+1)=dl
+    15bb:	83 c0 01             	add    $0x1,%eax			//eax++
+    15be:	83 f8 05             	cmp    $0x5,%eax
+    15c1:	7e df                	jle    15a2 <phase_5+0x30> 		//if eax<=5 转到前面15a2循环 0-5六次循环
+//************************************************************************************************************************
+
+    15c3:	c6 44 24 07 00       	movb   $0x0,0x7(%rsp)		//*(rsp+7)=0
+    15c8:	48 8d 7c 24 01       	lea    0x1(%rsp),%rdi		//rdi=rsp+1
+    15cd:	48 8d 35 6b 17 00 00 	lea    0x176b(%rip),%rsi          //
+    15d4:	e8 57 02 00 00       	callq  1830 <strings_not_equal>	//调用函数
+    15d9:	85 c0                	test   %eax,%eax			//必须返回0，也即两个串相同
+    15db:	75 16                	jne    15f3 <phase_5+0x81>
+    15dd:	48 8b 44 24 08       	mov    0x8(%rsp),%rax		//rax=*(rsp+8)
+    15ed:	48 83 c4 10          	add    $0x10,%rsp
+    15f1:	5b                   	pop    %rbx
+    15f2:	c3                   	retq   
+    15f3:	e8 3b 05 00 00       	callq  1b33 <explode_bomb>
+    15f8:	eb e3                	jmp    15dd <phase_5+0x6b>
+    15fa:	e8 d1 f8 ff ff       	callq  ed0 <__stack_chk_fail@plt>
+——————————————————————————————————————————————————————
+
+
+
+6：
+
+    1617:	48 89 e6             	mov    %rsp,%rsi			//rsi=rsp
+    161a:	e8 50 05 00 00       	callq  1b6f <read_six_numbers>	//输入六个数存在rsp ____   rsp+20中
+    161f:	bd 00 00 00 00       	mov    $0x0,%ebp			//ebp=0
+    1624:	eb 27                	jmp    164d <phase_6+0x4e>		//跳转164d
+    1626:	e8 08 05 00 00       	callq  1b33 <explode_bomb>
+    162b:	eb 33                	jmp    1660 <phase_6+0x61>
+    
+************************************************************************************************************************************************//循环
+    
+    164d:	83 fd 05             	cmp    $0x5,%ebp		//ebp>5 则跳转1669 //初始为0，所以6次循环
+    1652:	48 63 c5             	movslq %ebp,%rax		//rax=ebp
+    1655:	8b 04 84             	mov    (%rsp,%rax,4),%eax	//eax=*(rsp+4rax)
+    1658:	83 e8 01             	sub    $0x1,%eax		//eax=eax-1
+    165b:	83 f8 05             	cmp    $0x5,%eax		//eax>5则跳转爆炸
+    165e:	77 c6                	ja     1626 <phase_6+0x27>
+    1660:	44 8d 65 01          	lea    0x1(%rbp),%r12d	//r12d=rbp+1
+    1664:	44 89 e3             	mov    %r12d,%ebx		//ebx=r12d
+
+    162d:	83 c3 01             	add    $0x1,%ebx
+    1630:	83 fb 05             	cmp    $0x5,%ebx		//ebx>5则跳转164a
+    1635:	48 63 c5             	movslq %ebp,%rax		//rax=ebp
+    1638:	48 63 d3             	movslq %ebx,%rdx		//rdx=ebx
+    163b:	8b 3c 94             	mov    (%rsp,%rdx,4),%edi	//edi=*(rsp+rdx*4)
+    163e:	39 3c 84             	cmp    %edi,(%rsp,%rax,4)	//*(rsp+4*rax)!=edi则跳转162d
+    1641:	75 ea                	jne    162d <phase_6+0x2e>
+    1643:	e8 eb 04 00 00       	callq  1b33 <explode_bomb>//否则爆炸
+    1648:	eb e3                	jmp    162d <phase_6+0x2e>
+    164a:	44 89 e5             	mov    %r12d,%ebp		//ebp=r12d
+ 	164d
+***************************************************************************************************************************************************123456乱序
+    1669:	be 00 00 00 00       	mov    $0x0,%esi		//esi=0
+    166e:	eb 17                	jmp    1687 <phase_6+0x88>//跳转1687
+    1670:	48 8b 52 08          	mov    0x8(%rdx),%rdx	
+    1674:	83 c0 01             	add    $0x1,%eax
+
+    1677:	48 63 ce             	movslq %esi,%rcx
+    167a:	39 04 8c             	cmp    %eax,(%rsp,%rcx,4)
+    167d:	7f f1                	jg     1670 <phase_6+0x71>
+    167f:	48 89 54 cc 20       	mov    %rdx,0x20(%rsp,%rcx,8)
+    1684:	83 c6 01             	add    $0x1,%esi
+
+    1687:	83 fe 05             	cmp    $0x5,%esi		//esi>5则跳转169a进入末尾
+    168a:	7f 0e                	jg     169a <phase_6+0x9b>
+
+    168c:	b8 01 00 00 00       	mov    $0x1,%eax
+    1691:	48 8d 15 78 3a 20 00 	lea    0x203a78(%rip),%rdx        # 205110 <node1>
+    1698:	eb dd                	jmp    1677 <phase_6+0x78>
+
+    169a:	48 8b 5c 24 20       	mov    0x20(%rsp),%rbx	//rbx=*(rsp+32)
+    169f:	48 89 d9             	mov    %rbx,%rcx		//rcx=rbx
+    16a2:	b8 01 00 00 00       	mov    $0x1,%eax		//eax=1
+    16a7:	eb 12                	jmp    16bb <phase_6+0xbc>//跳转16bb
+***********************************************************************************************************************************************//循环
+    16a9:	48 63 d0             	movslq %eax,%rdx		//rdx=eax
+    16ac:	48 8b 54 d4 20       	mov    0x20(%rsp,%rdx,8),%rdx	//rdx=*(rsp+8rdx+32)
+    16b1:	48 89 51 08          	mov    %rdx,0x8(%rcx)		//*(rcx+8)=rdx
+    16b5:	83 c0 01             	add    $0x1,%eax			//eax++
+    16b8:	48 89 d1             	mov    %rdx,%rcx			//rcx=rdx
+    16bb:	83 f8 05             	cmp    $0x5,%eax		//eax<=5则跳转16a9
+**********************************************************************************************************************************************//
+    16be:	7e e9                	jle    16a9 <phase_6+0xaa>		
+    16c0:	48 c7 41 08 00 00 00 	movq   $0x0,0x8(%rcx)	//*(rcx+8)=0
+    16c8:	bd 00 00 00 00       	mov    $0x0,%ebp			//ebp=0  初始条件
+    16cd:	eb 07                	jmp    16d6 <phase_6+0xd7>		//跳转16d6
+**********************************************************************************************************************************************//循环
+    16cf:	48 8b 5b 08          	mov    0x8(%rbx),%rbx		//rbx=*(rbx+8)
+    16d3:	83 c5 01             	add    $0x1,%ebp			//ebp++
+    16d6:	83 fd 04             	cmp    $0x4,%ebp			//ebp>4则跳转16ec(返回结束）循环开始
+    16d9:	7f 11                	jg     16ec <phase_6+0xed>
+    16db:	48 8b 43 08          	mov    0x8(%rbx),%rax		//rax=*(rbx+8)
+    16df:	8b 00                	mov    (%rax),%eax			//eax=*rax
+    16e1:	39 03                	cmp    %eax,(%rbx)			//*rbx<=eax则跳转16cf
+**********************************************************************************************************************************************//
+    16e3:	7e ea                	jle    16cf <phase_6+0xd0>		
+    16e5:	e8 49 04 00 00       	callq  1b33 <explode_bomb>		//否则爆炸
+    16ea:	eb e3                	jmp    16cf <phase_6+0xd0>
+    16ec:	48 8b 44 24 58       	mov    0x58(%rsp),%rax
+    
+    
+0000000000001755 <secret_phase>:
+    1755:	53                   	push   %rbx
+    1756:	e8 55 04 00 00       	callq  1bb0 <read_line>
+    175b:	ba 0a 00 00 00       	mov    $0xa,%edx    //edx=10
+    1760:	be 00 00 00 00       	mov    $0x0,%esi	//esi=0
+    1765:	48 89 c7             	mov    %rax,%rdi	//rdi=rax
+    1768:	e8 e3 f7 ff ff       	callq  f50 <strtol@plt>
+    176d:	48 89 c3             	mov    %rax,%rbx	//rbx=rax
+    1770:	48 8d 3d 39 39 20 00 	lea    0x203939(%rip),%rdi        # 2050b0 <n1> //相对寻址
+    1777:	e8 8e ff ff ff       	callq  170a <get_sum>	
+    177c:	39 d8                	cmp    %ebx,%eax	//eax==ebx才能不爆炸
+    177e:	74 05                	je     1785 <secret_phase+0x30>
+    1780:	e8 ae 03 00 00       	callq  1b33 <explode_bomb>
+    1785:	48 8d 3d 84 15 00 00 	lea    0x1584(%rip),%rdi        # 2d10 <_IO_stdin_used+0x180>//相对寻址
+    178c:	e8 1f f7 ff ff       	callq  eb0 <puts@plt>
+    1791:	e8 61 05 00 00       	callq  1cf7 <phase_defused>
+    1796:	5b                   	pop    %rbx
+    1797:	c3                   	retq   
+
+
